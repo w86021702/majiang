@@ -1,4 +1,5 @@
 #include "GateSvr.h"
+#include "Dispather.h"
 
 #include <muduo/base/Logging.h>
 
