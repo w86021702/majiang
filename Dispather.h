@@ -20,6 +20,8 @@ public:
             const muduo::net::Buffer*,
             muduo::Timestamp)> CallBackFunc;
 
+    CallBack(const CallBackFunc& func):func_(func){}
+
     virtual int onMessage(
             const muduo::net::TcpConnectionPtr& conn,
             const muduo::net::Buffer* msg,
