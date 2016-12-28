@@ -2,6 +2,8 @@
 #include "Dispather.h"
 
 #include <muduo/base/Logging.h>
+#include "RequestDef.h"
+#include <sstream>
 
 using namespace muduo;
 using namespace muduo::net;
@@ -52,7 +54,23 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
         Buffer* buf,
         Timestamp time)
 {
-    string msg(buf->retrieveAllAsString());
-    LOG_INFO << conn->name() << " echo " << msg.size() << " bytes at " << time.toString();
-    conn->send(msg);
+    if (buf->readableBytes() >= SSPacket_Size)
+    {
+        const SSPacket * packet = (SSPacket *)buf->peek();
+        const uint32_t len = packet->len;
+        if (len + SSPacket_Size <= buf->readableBytes())
+        {
+            Buffer tmpBuf;
+            tmpBuf.append(buf->peek() + SSPacket_Size, len);
+            buf->retrieve(len + SSPacket_Size);
+            conn->send(string(buf->peek() + SSPacket_Size, len));
+        }
+        std::stringstream ss;
+        ss << "len : " << len;
+        conn->send(ss.str());
+        LOG_INFO << "packet recv cmd:" << packet->cmd << "uid" << packet->uid << "clientId" << packet->clientId;
+    }
+
+    //string msg(buf->retrieveAllAsString());
+    //LOG_INFO << conn->name() << " echo " << msg.size() << " bytes at " << time.toString();
 }

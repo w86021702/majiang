@@ -32,5 +32,9 @@ int Dispather::onMessage(
         muduo::Timestamp ts)
 {
     //解析出一个完整包分派下去
+    uint32_t cmd = 0; 
+    auto iter = cmd2cb_.find(cmd);
+    ICallBack *cb = iter->second;
+    cb->onMessage(conn, msg, ts);
     return 0;
 }
