@@ -29,6 +29,7 @@ private:
   muduo::net::TcpServer server_;
   int numConnected_; // should be atomic_int
   const int kMaxConnections_;
+  muduo::net::EventLoop* loop_;
 };
 
 }

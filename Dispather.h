@@ -31,7 +31,17 @@ private:
     CallBackFunc func_;
 };
 
-class Dispather
+class IDispather
+{
+public:
+    virtual int registerMsg(uint32_t cmd, ICallBack* cb) = 0;
+    virtual int onMessage( 
+            const muduo::net::TcpConnectionPtr& conn,
+            const muduo::net::Buffer* msg,
+            muduo::Timestamp ts) = 0;
+};
+
+class Dispather : public IDispather
 {
 public:
     Dispather();
@@ -45,7 +55,6 @@ public:
 
 private:
     std::map<uint32_t, ICallBack*> cmd2cb_;
-
 };
 
 

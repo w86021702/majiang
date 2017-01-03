@@ -2,6 +2,14 @@
 #include "Dispather.h"
 
 
+Dispather::Dispather()
+{
+}
+
+Dispather::~Dispather()
+{
+}
+
 int CallBack::onMessage(
         const muduo::net::TcpConnectionPtr& conn,
         const muduo::net::Buffer* msg,
@@ -9,14 +17,6 @@ int CallBack::onMessage(
 {
     int ret = func_(conn, msg, ts);
     return ret;
-}
-
-Dispather::Dispather()
-{
-}
-
-Dispather::~Dispather()
-{
 }
 
 int Dispather::registerMsg(uint32_t cmd, ICallBack* cb)

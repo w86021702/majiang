@@ -15,7 +15,9 @@ GateServer::GateServer(EventLoop* loop,
         int maxConnections)
     : server_(loop, listenAddr, "GateSvr"),
     numConnected_(0),
-    kMaxConnections_(maxConnections)
+    kMaxConnections_(maxConnections),
+    loop_(loop)
+
 {
     server_.setConnectionCallback(
             std::bind(&GateServer::onConnection, this, std::placeholders::_1));
