@@ -1,6 +1,8 @@
 #include <muduo/net/EventLoop.h>
 #include <muduo/base/Logging.h>
+
 #include "GateSvr.h"
+#include "Worker.h"
 
 using namespace muduo;
 using namespace muduo::net;
@@ -21,6 +23,9 @@ int main(int args, char **argv)
     EventLoop loop;
     Gate::GateServer server(&loop, addr, 1024);
     server.start();
+
+	Worker worker;
+	worker.start();
 
     loop.loop();
 

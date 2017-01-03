@@ -4,6 +4,7 @@
 #include <muduo/base/Logging.h>
 #include "RequestDef.h"
 #include <sstream>
+#include "BgMessageQueue.h"
 
 using namespace muduo;
 using namespace muduo::net;
@@ -56,21 +57,27 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
         Buffer* buf,
         Timestamp time)
 {
-    if (buf->readableBytes() >= SSPacket_Size)
+	LOG_INFO << "size : " << buf->readableBytes() << " packet recv : " << buf->peek();
+    while (buf->readableBytes() >= SSPacket_Size)
     {
         const SSPacket * packet = (SSPacket *)buf->peek();
         const uint32_t len = packet->len;
         if (len + SSPacket_Size <= buf->readableBytes())
         {
-            Buffer tmpBuf;
-            tmpBuf.append(buf->peek() + SSPacket_Size, len);
+			LOG_INFO << "packet recv cmd: " << packet->cmd << " uid:" << packet->uid << "  len: " << packet->len;
+
+			MQRecord r;
+			r.header = *packet;
+            r.buf_.append(buf->peek() + SSPacket_Size, len);
             buf->retrieve(len + SSPacket_Size);
+			BgMessageQueue::Instance()->Push(r);
             conn->send(string(buf->peek() + SSPacket_Size, len));
         }
-        std::stringstream ss;
-        ss << "len : " << len;
-        conn->send(ss.str());
-        LOG_INFO << "packet recv cmd:" << packet->cmd << "uid" << packet->uid << "clientId" << packet->clientId;
+		else
+		{
+			LOG_INFO << "body not full: " << packet->cmd << " uid:" << packet->uid << "  len: " << packet->len;
+			break;
+		}
     }
 
     //string msg(buf->retrieveAllAsString());
