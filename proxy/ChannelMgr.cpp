@@ -37,19 +37,6 @@ void Channel::onConnection(const TcpConnectionPtr& conn)
 
 void Channel::onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time)
 {
-    string msg(buf->retrieveAllAsString());
-    LOG_TRACE << conn->name() << " recv " << msg.size() << " bytes at " << time.toString();
-    if (msg == "quit\n")
-    {
-      conn->send("bye\n");
-      conn->shutdown();
-    }
-    else if (msg == "shutdown\n")
-    {
-      loop_->quit();
-    }
-    else
-    {
-      conn->send(msg);
-    }
+    //找到对应的uid socket
+    conn->send(buf->retrieveAllAsString());
 }

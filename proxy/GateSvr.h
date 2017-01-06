@@ -30,6 +30,7 @@ private:
   int numConnected_; // should be atomic_int
   const int kMaxConnections_;
   muduo::net::EventLoop* loop_;
+  std::map<uint32_t, muduo::bet::TcpConnectionPtr> uid2conn_;
 };
 
 }
