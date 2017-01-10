@@ -4,7 +4,7 @@
 
 Channel::Channel(muduo::net::EventLoop* loop, const InetAddress& listenAddr, const string& id)
     : loop_(loop),
-      client_(loop, listenAddr, "EchoClient"+id)
+    client_(loop, listenAddr, "EchoClient"+id)
 {
     client_.setConnectionCallback(
             std::bind(&Channel::onConnection, this, std::placeholders::_1));
@@ -25,12 +25,12 @@ void Channel::onConnection(const TcpConnectionPtr& conn)
 
     if (conn->connected())
     {
-      ++current;
-      if (implicit_cast<size_t>(current) < clients.size())
-      {
-        clients[current].get()->connect();
-      }
-      LOG_INFO << "*** connected " << current;
+        ++current;
+        if (implicit_cast<size_t>(current) < clients.size())
+        {
+            clients[current].get()->connect();
+        }
+        LOG_INFO << "*** connected " << current;
     }
     conn->send("world\n");
 }
