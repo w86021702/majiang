@@ -61,13 +61,15 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
     while (buf->readableBytes() >= SSPacket_Size)
     {
         const SSPacket * packet = (SSPacket *)buf->peek();
-        const uint32_t len = packet->len;
+        const uint32_t len = muduo::net::sockets::networkToHost32(packet->len);
         if (len + SSPacket_Size <= buf->readableBytes())
         {
-			LOG_INFO << "packet recv cmd: " << packet->cmd << " uid:" << packet->uid << "  len: " << packet->len;
+			LOG_INFO << "packet recv cmd: " << packet->cmd << " uid:" << packet->uid << "  len: " << packet->len
+                << " len: " << len;
 
 			MQRecord r;
 			r.header = *packet;
+            r.header.len = muduo::net::sockets::hostToNetwork32(len);
             r.buf_.append(buf->peek() + SSPacket_Size, len);
             buf->retrieve(len + SSPacket_Size);
 			BgMessageQueue::Instance()->Push(r);

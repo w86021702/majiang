@@ -3,6 +3,7 @@
 
 #include "GateSvr.h"
 #include "Worker.h"
+#include "ChannelMgr.h"
 
 using namespace muduo;
 using namespace muduo::net;
@@ -23,6 +24,8 @@ int main(int args, char **argv)
     EventLoop loop;
     Gate::GateServer server(&loop, addr, 1024);
     server.start();
+
+    ServiceMgr::Instance()->Init(&server, &loop);
 
 	Worker worker;
 	worker.start();

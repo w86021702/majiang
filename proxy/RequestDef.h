@@ -5,8 +5,8 @@
 
 enum EPacket_Type
 {
-    EPacket_Type_INPUT = 1;
-    EPacket_Type_OUTPUT = 2;
+    EPacket_Type_INPUT = 1,
+    EPacket_Type_OUTPUT = 2,
 };
 
 struct SSPacket

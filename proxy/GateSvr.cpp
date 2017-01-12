@@ -5,6 +5,7 @@
 #include "RequestDef.h"
 #include <sstream>
 #include "BgMessageQueue.h"
+#include "ChannelMgr.h"
 
 using namespace muduo;
 using namespace muduo::net;
@@ -51,8 +52,10 @@ void GateServer::onConnection(const TcpConnectionPtr& conn)
         }
 
         auto* clientHandler = new CClient();
-        connId2client_[++nextConnId_] = std::unique_ptr<CClient>(clientHandler);
-        name2connId_[conn->name()] = nextConnId_;
+        clientHandler->connId = ++nextConnId_;
+        clientHandler->conn = conn;
+        connId2client_[++nextConnId_] = std::shared_ptr<CClient>(clientHandler);
+        name2connId_[conn->name().c_str()] = nextConnId_;
     }
     else
     {
@@ -65,26 +68,35 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
         Buffer* buf,
         Timestamp time)
 {
-	LOG_INFO << "size : " << buf->readableBytes() << " packet recv : " << buf->peek();
     while (buf->readableBytes() >= CSPacket_Size)
     {
         const CSPacket * packet = (CSPacket *)buf->peek();
-        const uint32_t len = muduo::net::sockets::hostToNetwork32(packet->len);
+        uint32_t len = muduo::net::sockets::networkToHost32(packet->len);
+        //uint32_t len = packet->len; 
+        //const uint32_t len = muduo::net::sockets::hostToNetwork32(packet->len);
+        LOG_INFO << "not full, packet recv cmd: " << packet->cmd  << " trans len: " << len
+            << " packet_len: " << packet->len;
         if (len + CSPacket_Size <= buf->readableBytes())
         {
-			LOG_INFO << "packet recv cmd: " << packet->cmd  << "  len: " << packet->len;
+			LOG_INFO << "packet recv cmd: " << packet->cmd  << "  len: " << len;
 
             struct SSPacket header;
-			//r.header = *packet;
-            header.uid = 0;
-            header.clientId = packet->time;
-            header.cmd = packet->cmd;
-            header.type = EPacket_Type_INPUT;
-            header.len = packet->len;
-            header.time = packet->time;
-            //r.buf_.append(buf->peek() + CSPacket_Size, len);
-            buf->retrieve(len + CSPacket_Size);
+            //r.header = *packet;
+            auto connIdIt = name2connId_.find(conn->name().c_str());
+            if (connIdIt != name2connId_.end())
+            {
+                header.uid = 0;
+                header.clientId = connIdIt->second;
+                header.cmd = packet->cmd;
+                header.type = EPacket_Type_INPUT;
+                header.len = muduo::net::sockets::hostToNetwork32(len);
+                header.time = packet->time;
 
+                Buffer tmpBuf;
+                tmpBuf.append(buf->peek() + CSPacket_Size, len);
+                ServiceMgr::Instance()->Push(1, header, tmpBuf);
+            }
+            buf->retrieve(len + CSPacket_Size);
 			//BgMessageQueue::Instance()->Push(r);
         }
 		else
@@ -92,4 +104,11 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
 			break;
 		}
     }
+}
+
+void GateServer::notify(unsigned int clientId, muduo::net::Buffer* buf)
+{
+    auto connIt = connId2client_.find(clientId);
+    assert(connIt != connId2client_.end());
+    connIt->second->conn->send(buf);
 }

@@ -16,6 +16,7 @@ struct CClient
     unsigned int connId;
     muduo::net::TcpConnectionPtr conn;
 };
+typedef std::shared_ptr<CClient> ClientPtr;
 
 class GateServer
 {
@@ -25,6 +26,7 @@ public:
             int maxConnections);
 
     void start();
+    void notify(unsigned int clientId, muduo::net::Buffer* buf);
 
 private:
     void onConnection(const muduo::net::TcpConnectionPtr& conn);
@@ -39,7 +41,7 @@ private:
     const int kMaxConnections_;
     muduo::net::EventLoop* loop_;
     std::map<std::string, unsigned int> name2connId_;
-    std::map<unsigned int, std::unique_ptr<CClient> > connId2client_;
+    std::map<unsigned int, ClientPtr > connId2client_;
 };
 }
 
