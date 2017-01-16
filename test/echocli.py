@@ -13,18 +13,20 @@ while 1:
 		break
 	i = 0
 	mss = ''
-	while i < 1000:
+	while i < 1:
 		client_type = int(1)
 		check_sum = int(4)
 		#length = int(len(cmd))
 		ts = long(5)
-		i = i + 1
-		length = i
+		i = int(i + 1)
+		length = socket.htonl(i)
 		print "i:",i
-		msg = struct.pack('iiiiq', client_type, i,check_sum,length,ts)
+		msg = struct.pack('iiiiq', client_type, i, check_sum,length,ts)
 		s.send(msg)
 		mss = mss + 'a'
 		s.send(bytes(mss))
+		data = s.recv(1024)
+		print "resp data:", data
 
 #	while i > 0:
 #		data = s.recv(1024)

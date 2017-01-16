@@ -48,6 +48,7 @@ public:
 private:
     map<unsigned int, unique_ptr<Service> > channels_;
     muduo::net::EventLoop* loop_;
+    Gate::GateServer* gate_;
     ServiceMgr();
 };
 

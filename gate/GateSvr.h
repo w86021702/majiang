@@ -28,7 +28,9 @@ private:
 
   muduo::net::TcpServer server_;
   int numConnected_; // should be atomic_int
+  unsigned int curClientId;
   const int kMaxConnections_;
+  std::map<unsigned int, muduo::net::TcpConnectionPtr> id2tcpConn;
   muduo::net::EventLoop* loop_;
 };
 

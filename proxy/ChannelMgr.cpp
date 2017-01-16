@@ -1,11 +1,12 @@
 #include "ChannelMgr.h"
 #include <muduo/base/Logging.h>
 #include <muduo/net/EventLoop.h>
+#include "GateSvr.h"
 
 using namespace std;
 using namespace muduo::net;
 
-Service::Service(muduo::net::EventLoop* loop, const muduo::net::InetAddress& listenAddr, const string& id, ServiceMgr* mgr)
+Service::Service(muduo::net::EventLoop* loop, const muduo::net::InetAddress& listenAddr, const std::string& id, ServiceMgr* mgr)
     : loop_(loop),
     client_(loop, listenAddr, id.c_str())
 {
@@ -69,6 +70,7 @@ ServiceMgr::~ServiceMgr()
 int ServiceMgr::Init(Gate::GateServer* svr, muduo::net::EventLoop* loop)
 {
     loop_ = loop;
+    gate_ = svr;
 
     channels_[1] = std::unique_ptr<Service>(new
             Service(loop_, muduo::net::InetAddress("192.168.8.59", 9094), "1", this));
@@ -78,17 +80,14 @@ int ServiceMgr::Init(Gate::GateServer* svr, muduo::net::EventLoop* loop)
 void ServiceMgr::onMessage(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buf, muduo::Timestamp time)
 {
     //找到对应的uid socket
-	LOG_INFO << "size : " << buf->readableBytes() << " packet recv : " << buf->peek();
+	LOG_INFO << "recv from channel , readable size : " << buf->readableBytes() << " packet recv : " << buf->peek();
     while (buf->readableBytes() >= SSPacket_Size)
     {
         const SSPacket * packet = (SSPacket *)buf->peek();
         const uint32_t len = muduo::net::sockets::networkToHost32(packet->len);
         if (len + SSPacket_Size <= buf->readableBytes())
         {
-			LOG_INFO << "packet recv cmd: " << packet->cmd  << "  len: " << packet->len;
-
             struct CSPacket header;
-			//r.header = *packet;
             header.cmd = packet->cmd;
             header.checksum = 0;
             header.len = muduo::net::sockets::hostToNetwork32(len);
@@ -97,8 +96,11 @@ void ServiceMgr::onMessage(const muduo::net::TcpConnectionPtr& conn, muduo::net:
             Buffer tmpBuf;
             tmpBuf.append((char*)&header, sizeof(header));
             tmpBuf.append(buf->peek() + SSPacket_Size, len);
-            buf->retrieve(len + CSPacket_Size);
+            buf->retrieve(len + SSPacket_Size);
+            gate_->notify(packet->clientId, &tmpBuf);
 			//BgMessageQueue::Instance()->Push(r);
+			LOG_INFO << "packet recv  from channel cmd: " << packet->cmd  << "  len: " << len
+                << " resp: " << buf->peek() + SSPacket_Size;
         }
 		else
 		{

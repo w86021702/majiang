@@ -73,6 +73,7 @@ void GateServer::onMessage(const TcpConnectionPtr& conn,
             r.buf_.append(buf->peek() + SSPacket_Size, len);
             buf->retrieve(len + SSPacket_Size);
 			BgMessageQueue::Instance()->Push(r);
+            conn->send((char*)(packet), SSPacket_Size);
             conn->send(string(buf->peek() + SSPacket_Size, len));
         }
 		else
