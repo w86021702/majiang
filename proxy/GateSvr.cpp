@@ -30,7 +30,7 @@ GateServer::GateServer(EventLoop* loop,
 
 void GateServer::start()
 {
-    server_.setThreadNum(5);
+    server_.setThreadNum(4);
     server_.start();
 }
 

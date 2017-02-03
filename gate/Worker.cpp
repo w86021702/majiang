@@ -1,3 +1,4 @@
+#include "proto/cmddef.h"
 #include "Worker.h"
 #include "BgMessageQueue.h"
 
@@ -25,7 +26,15 @@ void Worker::threadFunc()
 			printf("pop error \n");
 			continue;
 		}
-		printf("uid:%d tid=%d queue result %s\n", r.header.uid, muduo::CurrentThread::tid(), r.buf_.peek());
+
+        if (r.header.cmd == CMD_LOGIN)
+        {
+            printf("uid:%d tid=%d queue cmd : %u, parse packet \n", r.header.uid, muduo::CurrentThread::tid(), r.header.cmd);
+        }
+        else
+        {
+            printf("uid:%d tid=%d queue result %s\n", r.header.uid, muduo::CurrentThread::tid(), r.buf_.peek());
+        }
 	}
 }
 
